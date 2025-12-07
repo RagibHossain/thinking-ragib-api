@@ -19,8 +19,35 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 
 // CORS configuration
+const getCorsOrigins = (): string | string[] => {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const corsOrigin = process.env.CORS_ORIGIN;
+
+  // If CORS_ORIGIN is explicitly set, parse it (supports comma-separated list)
+  if (corsOrigin) {
+    // Check if it's a comma-separated list
+    if (corsOrigin.includes(',')) {
+      return corsOrigin.split(',').map((origin) => origin.trim());
+    }
+    return corsOrigin;
+  }
+
+  // In development, allow common localhost ports if CORS_ORIGIN is not set
+  if (isDevelopment) {
+    return [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173', // Vite default port
+    ];
+  }
+
+  // In production, default to allowing all origins if not specified
+  // (should be explicitly set in production for security)
+  return '*';
+};
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: getCorsOrigins(),
   credentials: true,
   optionsSuccessStatus: 200,
 };
